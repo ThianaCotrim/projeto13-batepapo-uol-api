@@ -24,9 +24,8 @@ app.post("/participants", (req, res) => {
 
     const {name} = req.body
 
-    if(!name) {
+    if(!name && typeof name !== "") {
         res.status(422).send("Todos os campos são obrigatórios")
-        return
     }
 
     const newParticipant = { name , lastStatus: Date.now()}
@@ -58,7 +57,6 @@ app.post("/participants", (req, res) => {
                 return res.status(409).send("Esse usuário já existe, escolha outro usuário.")
         })
         .catch((err) => res.status(500).send(err.message))
-       
 })
 
 app.get("/participants", (req, res) => {
@@ -71,11 +69,40 @@ app.get("/participants", (req, res) => {
 app.post("messages", (req, res) => {
     const {to, text, type} = req.body
     const from = req.headers.user 
+    const tiposMsg = ["message", "private_message"]
 
+    const msg = {
+        to,
+        text,
+        type,
+        from,
+        time: dayjs().format("HH:mm:ss")
+    }
+
+    if (!to || !text || !type || !from || !tiposMsg.includes(type)){
+        return res.status(402).send("Todos os campos são obrigatórios")
+    }
+
+    db.collection("participants").find({name: from}).toArray()
+        .then(u => {
+            if (!u.length){
+                return res.status(402).send("É necessário estar ativo/logado")
+            }
+            db.collection("messages").insertOne(msg)
+            .then(() => { return res.status(201).send("Menssagem enviada com sucesso")})
+            .catch((err) => {
+                console.log(err)
+                return res.status(500)
+            })
+        })
+        .catch((err) => {
+            console.log(err)
+            return res.status(500)
+        })
 })
 
 app.get("/messages", (req, res) => {
-
+    const { limit } = req.query
     const name = req.headers.user 
     if(!name) return res.sendStatus(409)
 
@@ -83,8 +110,21 @@ app.get("/messages", (req, res) => {
 
         .then((messages) => {
             console.log(messages)
-            return res.status(200).send(messages)})
-        .catch((err) => res.status(500).send(err.message))
+            const enviarMsg = messages.filter((msg) => {
+                if (name === msg.to || name === msg.from || msg.to === "Todos" || msg.type === "status"){
+                    return msg
+                }
+            })
+            if (!limit) {
+                return res.send(enviarMsg)
+            }
+            if (limit > 0 && Number.isNan(Number(limit))) {
+                return res.send(enviarMsg.slice(-limit))
+            }
+
+            return res.status(422).send("Valor não definido")})
+
+        .catch((err) => res.send(err.message))
 })
 
 
