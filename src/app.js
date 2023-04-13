@@ -66,7 +66,7 @@ app.get("/participants", (req, res) => {
         .catch((err) => res.status(500).send(err.message))
 })
 
-app.post("messages", (req, res) => {
+app.post("/messages", (req, res) => {
     const {to, text, type} = req.body
     const from = req.headers.user 
     const tiposMsg = ["message", "private_message"]
@@ -79,7 +79,7 @@ app.post("messages", (req, res) => {
         time: dayjs().format("HH:mm:ss")
     }
 
-    if (!to || !text || !type || !from || !tiposMsg.includes(type)){
+    if (!to || !text || !type || !from ){
         return res.status(402).send("Todos os campos são obrigatórios")
     }
 
