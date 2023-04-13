@@ -21,11 +21,12 @@ mongoClient.connect()
 
 //Endpoints
 app.post("/participants", (req, res) => {
+
     const {name} = req.body
-    
 
     if(!name) {
-        return res.status(422).send("Todos os campos são obrigatórios")
+        res.status(422).send("Todos os campos são obrigatórios")
+        return
     }
 
     const newParticipant = { name , lastStatus: Date.now()}
@@ -42,30 +43,21 @@ app.post("/participants", (req, res) => {
         .then((dados) => {
             if(!dados.length){
                 db.collection("participants").insertOne(newParticipant)
-                .then(() => {
-                    
+                .then(() => { 
                     db.collection("messages").insertOne(newMessage)
                     .then(() => {
                         res.status(201).send("Participante cadastrado")
                         console.log(newMessage)
                         return
                     })
-                    
                     .catch((err) => res.status(422).send(err.message))
                 })
                 .catch((err) => res.status(422).send(err.message))
                 return
             }
                 return res.status(409).send("Esse usuário já existe, escolha outro usuário.")
-    
-            
         })
         .catch((err) => res.status(500).send(err.message))
-        
-
-
-     
-
        
 })
 
@@ -78,6 +70,7 @@ app.get("/participants", (req, res) => {
 
 app.post("messages", (req, res) => {
     const {to, text, type} = req.body
+    const from = req.headers.user 
 
 })
 
@@ -93,8 +86,6 @@ app.get("/messages", (req, res) => {
             return res.status(200).send(messages)})
         .catch((err) => res.status(500).send(err.message))
 })
-
-
 
 
 const PORT = 5000
