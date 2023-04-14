@@ -80,7 +80,7 @@ app.post("/messages", (req, res) => {
     }
 
     if (!to || !text || !type || !from ){
-        return res.status(402).send("Todos os campos são obrigatórios")
+        return res.status(422).send("Todos os campos são obrigatórios")
     }
 
     db.collection("participants").find({name: from}).toArray()
