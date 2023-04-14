@@ -104,11 +104,13 @@ app.post("/messages", (req, res) => {
 app.get("/messages", (req, res) => {
     const { limit } = req.query
     const name = req.headers.user 
+
+
     if(!name) return res.sendStatus(409)
 
     db.collection("messages").find().toArray()
 
-        .then((messages) => {
+        .then(messages => {
             console.log(messages)
             const enviarMsg = messages.filter((msg) => {
                 if (name === msg.to || name === msg.from || msg.to === "Todos" || msg.type === "status"){
@@ -118,14 +120,15 @@ app.get("/messages", (req, res) => {
             if (!limit) {
                 return res.send(enviarMsg)
             }
-            if (limit > 0 && Number.isNan(Number(limit))) {
+            if (limit > 0 && !Number.isNaN(Number(limit))) {
                 return res.send(enviarMsg.slice(-limit))
             }
 
             return res.status(422).send("Valor não definido")})
 
         .catch((err) => res.send(err.message))
-})
+
+});
 
 
 const PORT = 5000
