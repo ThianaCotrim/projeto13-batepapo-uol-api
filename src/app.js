@@ -136,9 +136,9 @@ app.post("/status", async (req, res) => {
     const usuario = req.headers.user
     console.log(usuario)
 
-    if (!usuario) {
-        res.status(404).send("Usuário inválido")
-    }
+    // if (!usuario) {
+    //     res.status(404).send("Usuário inválido")
+    // }
         
         try {
            const verIncluiPart = await db.collection("participants").findOne({usuario})
