@@ -3,7 +3,7 @@ import cors from "cors"
 import { MongoClient } from "mongodb"
 import dotenv from "dotenv"
 import dayjs from "dayjs"
-import Joi from "joi";
+import joi from "joi";
 
 //Criação de um Servidor
 const app = express()
@@ -22,13 +22,22 @@ mongoClient.connect()
 
 //Endpoints
 app.post("/participants", (req, res) => {
-
+   
     const {name} = req.body
 
-    if(!name && typeof name !== "") {
-        res.status(422).send("Todos os campos são obrigatórios")
+    const userSchema = joi.object({ name: joi.string().required()})
+    const validate = userSchema.validate(req.body)
+
+    if (validate.error){
+        return res.sendStatus(422)
     }
 
+    // // const user = schema.validate(req.body, {abortEarly: false})
+    // const user = {name:""}
+    // if(!name && typeof name !== "") {
+    //     res.status(422).send("Todos os campos são obrigatórios")
+    // }
+    
     const newParticipant = { name , lastStatus: Date.now()}
 
     const newMessage = {  
@@ -72,6 +81,17 @@ app.post("/messages", (req, res) => {
     const from = req.headers.user 
     const tiposMsg = ["message", "private_message"]
 
+    const userSchema = joi.object({ 
+        to: joi.string().required(),
+        text: joi.string().required(),
+        type: joi.string().required()})
+
+    const validate = userSchema.validate(req.body)
+
+    if (validate.error){
+        return res.sendStatus(422)
+    }
+
     const msg = {
         to,
         text,
@@ -80,9 +100,9 @@ app.post("/messages", (req, res) => {
         time: dayjs().format("HH:mm:ss")
     }
 
-    if (!to || !text || !type || !from ){
-        return res.status(422).send("Todos os campos são obrigatórios")
-    }
+    // if (!to || !text || !type || !from ){
+    //     return res.status(422).send("Todos os campos são obrigatórios")
+    // }
 
     db.collection("participants").find({name: from}).toArray()
         .then(u => {
@@ -136,9 +156,9 @@ app.post("/status", async (req, res) => {
     const usuario = req.headers.user
     console.log(usuario)
 
-    // if (!usuario) {
-    //     res.status(404).send("Usuário inválido")
-    // }
+    if (!usuario) {
+        res.status(404)
+    }
         
         try {
            const verIncluiPart = await db.collection("participants").findOne({usuario})
