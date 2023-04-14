@@ -2,7 +2,8 @@ import express from "express";
 import cors from "cors"
 import { MongoClient } from "mongodb"
 import dotenv from "dotenv"
-import dayjs from "dayjs";
+import dayjs from "dayjs"
+import Joi from "joi";
 
 //Criação de um Servidor
 const app = express()
@@ -129,6 +130,31 @@ app.get("/messages", (req, res) => {
         .catch((err) => res.send(err.message))
 
 });
+
+app.post("/status", async (req, res) => {
+
+    const usuario = req.headers.user
+    console.log(usuario)
+
+    if (!usuario) {
+        res.status(404).send("Usuário inválido")
+    }
+        
+        try {
+           const verIncluiPart = await db.collection("participants").findOne({usuario})
+           
+           if(!verIncluiPart)
+            return res.sendStatus(404)
+           } catch (err) {
+            return res.sendStatus(500)
+           }
+
+           try {
+            await db.collection("participants").updateOne({usuario}, {$set: {lastStatus: Date.now()}})
+            res.status(200).send("Usuario Online")
+           } catch {return res.status(422)}
+           
+})
 
 
 const PORT = 5000
