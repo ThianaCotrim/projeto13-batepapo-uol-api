@@ -84,7 +84,8 @@ app.post("/messages", (req, res) => {
     const userSchema = joi.object({ 
         to: joi.string().required(),
         text: joi.string().required(),
-        type: joi.string().required()})
+        type: joi.string().required(),
+        from: joi.string()})
 
     const validate = userSchema.validate(req.body)
 
@@ -161,7 +162,7 @@ app.post("/status", async (req, res) => {
     }
         
         try {
-           const verIncluiPart = await db.collection("participants").findOne({usuario})
+           const verIncluiPart = await db.collection("participants").findOne(usuario)
            
            if(!verIncluiPart)
             return res.sendStatus(404)
