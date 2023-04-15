@@ -154,26 +154,37 @@ app.get("/messages", (req, res) => {
 
 app.post("/status", async (req, res) => {
 
-    const usuario = req.headers.user
-    console.log(usuario)
+    const {user} = req.headers
 
-    if (!usuario) {
-        res.status(404)
-    }
+
+    // if (!user) {
+    //     res.status(404)
+    // }
         
-        try {
-           const verIncluiPart = await db.collection("participants").findOne(usuario)
+        // try {
+        //    const verIncluiPart = await db.collection("participants").findOne({name: user})
            
-           if(!verIncluiPart)
-            return res.sendStatus(404)
-           } catch (err) {
-            return res.sendStatus(500)
-           }
+        //    if(!verIncluiPart)
+        //     return res.sendStatus(404)
+        //    } catch (err) {
+        //     return res.sendStatus(500)
+        //    }
 
-           try {
-            await db.collection("participants").updateOne({usuario}, {$set: {lastStatus: Date.now()}})
-            res.status(200).send("Usuario Online")
-           } catch {return res.status(422)}
+        //    try {
+        //     await db.collection("participants").updateOne({usuario}, {$set: {lastStatus: Date.now()}})
+        //     res.status(200).send("Usuario Online")
+        //    } catch {return res.status(422)}
+
+        try {
+            const verIncluiPart = await db.collection("participants").findOne({name: user})
+
+            if (!verIncluiPart){
+                return res.sendStatus(404)
+            } else {
+                await db.collection("participants").updateOne({name: user}, {$set: {lastStatus: Date.now()}})
+                return res.sendStatus(200)
+            }
+        } catch {return res.sendStatus(404)}
            
 })
 
