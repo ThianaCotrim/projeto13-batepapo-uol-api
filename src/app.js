@@ -50,7 +50,6 @@ app.post("/participants", (req, res) => {
                     db.collection("messages").insertOne(newMessage)
                     .then(() => {
                         res.status(201).send("Participante cadastrado")
-                        console.log(newMessage)
                         return
                     })
                     .catch((err) => res.status(422).send(err.message))
@@ -124,7 +123,7 @@ app.get("/messages", (req, res) => {
     db.collection("messages").find().toArray()
 
         .then(messages => {
-            console.log(messages)
+
             const enviarMsg = messages.filter((msg) => {
                 if (name === msg.to || name === msg.from || msg.to === "Todos" || msg.type === "status"){
                     return msg
@@ -161,43 +160,49 @@ app.post("/status", async (req, res) => {
 })
 
 
-    setInterval( async () => {
-        let agora = Date.now() - 10000
+ 
+async function removerParticipantesAntigos (){
+    const agora = Date.now()
 
-        try{
-            const saida = await db.collection("participants").find({lastStatus: {$lte: agora}}).toArray
+    try{
+        const offline = await db.collection("participants").find({lastStatus: {$lt: agora - 10000}}).toArray()
+        
+        offline.forEach(async ({name}) => {
+            
+            const msgSaida = {
+                from: name,
+                to: "Todos",
+                text: "sai da sala...",
+                type: 'status',
+                time:dayjs().format("HH:mm:ss")
+              }
 
-            if (saida !== []){
-                saida.forEach((user) => {
-                    db.collection("messages").insertOne({
-                        from: user.name,
-                        to: "Todos",
-                        text: "sai da sala...",
-                        type: 'status',
-                        time:dayjs().format("HH:mm:ss")
 
-                    })
-                })
-            }
-            await db.collection("participants").deleteMany({lastStatus: {$lte: agora}})
-        } catch(err) {
+              try {
+                const count = await db.collection("participants").deleteOne({name})
+                await db.collection("messages").insertOne(msgSaida)    
 
+                console.log(count.deletedCount)
+              } catch (err){
+                console.log(err.message)
+              }
+        })
+    } catch(err) {
+
+    }
+}
+
+function atualizador () {
+
+  setInterval(() => {
+    removerParticipantesAntigos()
+ 
+         }, 15000)
         }
-    }, 1500)
 
-    // function removerParticipantesAntigos (){
-    //     const agora = Date.now()
+    atualizador ()
 
-    //    db.collection("participants").deleteMany({lastStatus: {$lt: agora - 10000}})
-
-    //     }
-
-    // function atualizador () {
-
-    //     setInterval(async ({name}) => {
-    //         removerParticipantesAntigos()
-
-    //         const msgSaida = {
+       //         const msgSaida = {
     //                         from: name,
     //                         to: "Todos",
     //                         text: "sai da sala...",
@@ -210,11 +215,7 @@ app.post("/status", async (req, res) => {
     
     //            }catch (err){
 
-    //            }         
-    //      }, 15000)
-    // }
-
-    // atualizador ()
+    //            }          
 
 
 
@@ -244,6 +245,32 @@ app.post("/status", async (req, res) => {
             //           .catch((err) => {
             //               console.log(err)
             //               return res.status(500)})
+
+
+               // setInterval( async () => {
+    //     let agora = Date.now() - 10000
+
+    //     try{
+    //         const saida = await db.collection("participants").find({lastStatus: {$lte: agora}}).toArray
+
+    //         if (saida !== []){
+    //             saida.forEach((user) => {
+    //                 db.collection("messages").insertOne({
+    //                     from: user.name,
+    //                     to: "Todos",
+    //                     text: "sai da sala...",
+    //                     type: 'status',
+    //                     time:dayjs().format("HH:mm:ss")
+
+    //                 })
+    //             })
+    //         }
+    //         await db.collection("participants").deleteMany({lastStatus: {$lte: agora}})
+    //     } catch(err) {
+
+    //     }
+    // }, 1500)
+
 
 const PORT = 5000
 app.listen(PORT, () => console.log(`Servidor rodando na porta ${PORT}`))    
