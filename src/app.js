@@ -80,7 +80,7 @@ app.get("/participants", (req, res) => {
 app.post("/messages", (req, res) => {
     const {to, text, type} = req.body
     const from = req.headers.user 
-    const isValid = ["messase", "private_message"].includes(req.body.type)
+    const tiposMsg= ["messase", "private_message"]
 
     const userSchema = joi.object({ 
         to: joi.string().required(),
@@ -88,11 +88,9 @@ app.post("/messages", (req, res) => {
         type: joi.string().required(),
         from: joi.string()})
 
-        
-
     const validate = userSchema.validate(req.body)
 
-    if (validate.error || isValid){
+    if (validate.error){
         return res.sendStatus(422)
     }
 
@@ -103,10 +101,6 @@ app.post("/messages", (req, res) => {
         from,
         time: dayjs().format("HH:mm:ss")
     }
-
-    // if (!to || !text || !type || !from ){
-    //     return res.status(422).send("Todos os campos são obrigatórios")
-    // }
 
     db.collection("participants").find({name: from}).toArray()
         .then(u => {
@@ -172,10 +166,6 @@ app.post("/status", async (req, res) => {
            
 })
 
-// function removerParticipantesAntigos () {
-   
-  
-
     function removerParticipantesAntigos (){
         const agora = Date.now()
 
@@ -190,21 +180,6 @@ app.post("/status", async (req, res) => {
     }
 
     atualizador ()
-
-
-//     db.collection("participants").filter((participante) => {
-//             .then(participante => {
-//                 return agora - participante.lastStatus <= 10000})
-//             .catch((err) => res.status(500))
-//         return agora - participante.lastStatus <= 10000; 
-//     )}
-//             }
-
-// function atulizador () {
-//     setInterval(removerParticipantesAntigos, 15000)
-
-// 
-// atulizador();
 
 const PORT = 5000
 app.listen(PORT, () => console.log(`Servidor rodando na porta ${PORT}`))    
