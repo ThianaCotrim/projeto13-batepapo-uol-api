@@ -73,13 +73,14 @@ app.get("/participants", (req, res) => {
     db.collection("participants").find().toArray()
 
         .then((part) => res.status(200).send(part))
-        .catch((err) => res.status(500).send(err.message))
+        .catch((err) => res.status(500).send(err.message))  
+
 })
 
 app.post("/messages", (req, res) => {
     const {to, text, type} = req.body
     const from = req.headers.user 
-    const tiposMsg = ["message", "private_message"]
+    const isValid = ["messase", "private_message"].includes(req.body.type)
 
     const userSchema = joi.object({ 
         to: joi.string().required(),
@@ -87,9 +88,11 @@ app.post("/messages", (req, res) => {
         type: joi.string().required(),
         from: joi.string()})
 
+        
+
     const validate = userSchema.validate(req.body)
 
-    if (validate.error){
+    if (validate.error || isValid){
         return res.sendStatus(422)
     }
 
@@ -156,25 +159,6 @@ app.post("/status", async (req, res) => {
 
     const {user} = req.headers
 
-
-    // if (!user) {
-    //     res.status(404)
-    // }
-        
-        // try {
-        //    const verIncluiPart = await db.collection("participants").findOne({name: user})
-           
-        //    if(!verIncluiPart)
-        //     return res.sendStatus(404)
-        //    } catch (err) {
-        //     return res.sendStatus(500)
-        //    }
-
-        //    try {
-        //     await db.collection("participants").updateOne({usuario}, {$set: {lastStatus: Date.now()}})
-        //     res.status(200).send("Usuario Online")
-        //    } catch {return res.status(422)}
-
         try {
             const verIncluiPart = await db.collection("participants").findOne({name: user})
 
@@ -188,6 +172,39 @@ app.post("/status", async (req, res) => {
            
 })
 
+// function removerParticipantesAntigos () {
+   
+  
+
+    function removerParticipantesAntigos (){
+        const agora = Date.now()
+
+        db.collection("participants").deleteMany({lastStatus: {$lt: agora - 10000}})
+    }
+
+    function atualizador () {
+
+        setInterval(() => {
+            removerParticipantesAntigos()
+         }, 15000)
+    }
+
+    atualizador ()
+
+
+//     db.collection("participants").filter((participante) => {
+//             .then(participante => {
+//                 return agora - participante.lastStatus <= 10000})
+//             .catch((err) => res.status(500))
+//         return agora - participante.lastStatus <= 10000; 
+//     )}
+//             }
+
+// function atulizador () {
+//     setInterval(removerParticipantesAntigos, 15000)
+
+// 
+// atulizador();
 
 const PORT = 5000
 app.listen(PORT, () => console.log(`Servidor rodando na porta ${PORT}`))    
