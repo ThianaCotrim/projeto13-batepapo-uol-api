@@ -31,12 +31,6 @@ app.post("/participants", (req, res) => {
     if (validate.error){
         return res.sendStatus(422)
     }
-
-    // // const user = schema.validate(req.body, {abortEarly: false})
-    // const user = {name:""}
-    // if(!name && typeof name !== "") {
-    //     res.status(422).send("Todos os campos são obrigatórios")
-    // }
     
     const newParticipant = { name , lastStatus: Date.now()}
 
@@ -166,20 +160,90 @@ app.post("/status", async (req, res) => {
            
 })
 
-    function removerParticipantesAntigos (){
-        const agora = Date.now()
 
-        db.collection("participants").deleteMany({lastStatus: {$lt: agora - 10000}})
-    }
+    setInterval( async () => {
+        let agora = Date.now() - 10000
 
-    function atualizador () {
+        try{
+            const saida = await db.collection("participants").find({lastStatus: {$lte: agora}}).toArray
 
-        setInterval(() => {
-            removerParticipantesAntigos()
-         }, 15000)
-    }
+            if (saida !== []){
+                saida.forEach((user) => {
+                    db.collection("messages").insertOne({
+                        from: user.name,
+                        to: "Todos",
+                        text: "sai da sala...",
+                        type: 'status',
+                        time:dayjs().format("HH:mm:ss")
 
-    atualizador ()
+                    })
+                })
+            }
+            await db.collection("participants").deleteMany({lastStatus: {$lte: agora}})
+        } catch(err) {
+
+        }
+    }, 1500)
+
+    // function removerParticipantesAntigos (){
+    //     const agora = Date.now()
+
+    //    db.collection("participants").deleteMany({lastStatus: {$lt: agora - 10000}})
+
+    //     }
+
+    // function atualizador () {
+
+    //     setInterval(async ({name}) => {
+    //         removerParticipantesAntigos()
+
+    //         const msgSaida = {
+    //                         from: name,
+    //                         to: "Todos",
+    //                         text: "sai da sala...",
+    //                         type: 'status',
+    //                         time:dayjs().format("HH:mm:ss")
+    //                         }
+    //            try {
+
+    //            await db.collection("menssages").insertOne(msgSaida)    
+    
+    //            }catch (err){
+
+    //            }         
+    //      }, 15000)
+    // }
+
+    // atualizador ()
+
+
+
+      // teste.forEach( async ({name}) => {
+        //     try {
+
+        //         const msgSaida = {
+        //             to: "Todos",
+        //             type: 'status',
+        //             from: name,
+        //             text: "sai da sala...",
+        //             }
+
+        //             await db.collection("menssages").insertOne(msgSaida)
+
+        //     } catch (err){
+        //         console.log(err)
+        //     }
+       
+            // const {name} = req.body
+                  
+          
+          
+          
+            //       db.collection("menssages").insertOne(msgSaida)
+            //       .then(() => { return res.status(201).send("Menssagem enviada com sucesso")})
+            //           .catch((err) => {
+            //               console.log(err)
+            //               return res.status(500)})
 
 const PORT = 5000
 app.listen(PORT, () => console.log(`Servidor rodando na porta ${PORT}`))    
