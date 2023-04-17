@@ -74,6 +74,7 @@ app.post("/messages", (req, res) => {
     const {to, text, type} = req.body
     const from = req.headers.user 
     const tiposMsg= ["messase", "private_message"]
+    const {user} = req.headers
 
     const userSchema = joi.object({ 
         to: joi.string().required(),
@@ -86,6 +87,9 @@ app.post("/messages", (req, res) => {
     if (validate.error){
         return res.sendStatus(422)
     }
+
+    const isParticipant =  db.collection("participants").findOne({ name: user })
+        if (isParticipant === null) return res.status(422).send("Este usuário saiu")
 
     const msg = {
         to,
@@ -160,13 +164,11 @@ app.post("/status", async (req, res) => {
 })
 
 
- 
 async function removerParticipantesAntigos (){
     const agora = Date.now()
 
     try{
         const offline = await db.collection("participants").find({lastStatus: {$lt: agora - 10000}}).toArray()
-        
         offline.forEach(async ({name}) => {
             
             const msgSaida = {
@@ -176,20 +178,14 @@ async function removerParticipantesAntigos (){
                 type: 'status',
                 time:dayjs().format("HH:mm:ss")
               }
-
-
               try {
                 const count = await db.collection("participants").deleteOne({name})
                 await db.collection("messages").insertOne(msgSaida)    
-
                 console.log(count.deletedCount)
-              } catch (err){
-                console.log(err.message)
-              }
-        })
-    } catch(err) {
 
-    }
+              } catch (err){console.log(err.message)}
+        })
+    } catch(err) {}
 }
 
 function atualizador () {
@@ -197,79 +193,9 @@ function atualizador () {
   setInterval(() => {
     removerParticipantesAntigos()
  
-         }, 15000)
-        }
+         }, 15000)}
 
     atualizador ()
-
-       //         const msgSaida = {
-    //                         from: name,
-    //                         to: "Todos",
-    //                         text: "sai da sala...",
-    //                         type: 'status',
-    //                         time:dayjs().format("HH:mm:ss")
-    //                         }
-    //            try {
-
-    //            await db.collection("menssages").insertOne(msgSaida)    
-    
-    //            }catch (err){
-
-    //            }          
-
-
-
-      // teste.forEach( async ({name}) => {
-        //     try {
-
-        //         const msgSaida = {
-        //             to: "Todos",
-        //             type: 'status',
-        //             from: name,
-        //             text: "sai da sala...",
-        //             }
-
-        //             await db.collection("menssages").insertOne(msgSaida)
-
-        //     } catch (err){
-        //         console.log(err)
-        //     }
-       
-            // const {name} = req.body
-                  
-          
-          
-          
-            //       db.collection("menssages").insertOne(msgSaida)
-            //       .then(() => { return res.status(201).send("Menssagem enviada com sucesso")})
-            //           .catch((err) => {
-            //               console.log(err)
-            //               return res.status(500)})
-
-
-               // setInterval( async () => {
-    //     let agora = Date.now() - 10000
-
-    //     try{
-    //         const saida = await db.collection("participants").find({lastStatus: {$lte: agora}}).toArray
-
-    //         if (saida !== []){
-    //             saida.forEach((user) => {
-    //                 db.collection("messages").insertOne({
-    //                     from: user.name,
-    //                     to: "Todos",
-    //                     text: "sai da sala...",
-    //                     type: 'status',
-    //                     time:dayjs().format("HH:mm:ss")
-
-    //                 })
-    //             })
-    //         }
-    //         await db.collection("participants").deleteMany({lastStatus: {$lte: agora}})
-    //     } catch(err) {
-
-    //     }
-    // }, 1500)
 
 
 const PORT = 5000
