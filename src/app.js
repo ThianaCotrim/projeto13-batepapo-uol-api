@@ -73,7 +73,7 @@ app.get("/participants", (req, res) => {
 app.post("/messages", async (req, res) => {
     const {to, text, type} = req.body
     const from = req.headers.user 
-    const tiposMsg= ["messase", "private_message"]
+    const tiposMsg= ["message", "private_message"]
     const {user} = req.headers
 
     const userSchema = joi.object({ 
