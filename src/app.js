@@ -88,10 +88,10 @@ app.post("/messages", async (req, res) => {
         return res.sendStatus(422)
     }
 
-    try{ 
+   
         const isParticipant =  db.collection("participants").findOne({ name: user })
         if (!isParticipant) return res.status(422).send("Este usuário saiu")
-    } catch { return res.sendStatus(422) }
+  
     
 
     const msg = {
