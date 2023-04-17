@@ -73,7 +73,6 @@ app.get("/participants", (req, res) => {
 app.post("/messages", async (req, res) => {
     const {to, text, type} = req.body
     const from = req.headers.user 
-    // const tiposMsg= ["message", "private_message"]
     const {user} = req.headers
 
     const userSchema = joi.object({ 
@@ -93,8 +92,6 @@ app.post("/messages", async (req, res) => {
             if (!isParticipant) return res.status(422).send("Este usuário saiu")
         }catch { return res.sendStatus(422) }
        
-  
-    
 
     const msg = {
         to,
