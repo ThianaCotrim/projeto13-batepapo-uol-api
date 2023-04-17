@@ -73,13 +73,13 @@ app.get("/participants", (req, res) => {
 app.post("/messages", async (req, res) => {
     const {to, text, type} = req.body
     const from = req.headers.user 
-    const tiposMsg= ["message", "private_message"]
+    // const tiposMsg= ["message", "private_message"]
     const {user} = req.headers
 
     const userSchema = joi.object({ 
         to: joi.string().required(),
         text: joi.string().required(),
-        type: joi.string().required().valid(tiposMsg),
+        type: joi.string().required().valid("message" , "private_message"),
         from: joi.string()})
 
     const validate = userSchema.validate(req.body)
@@ -88,9 +88,11 @@ app.post("/messages", async (req, res) => {
         return res.sendStatus(422)
     }
 
-   
-        const isParticipant =  db.collection("participants").findOne({ name: user })
-        if (!isParticipant) return res.status(422).send("Este usuário saiu")
+        try {
+            const isParticipant =  await db.collection("participants").findOne({ name: user })
+            if (!isParticipant) return res.status(422).send("Este usuário saiu")
+        }catch { return res.sendStatus(422) }
+       
   
     
 
